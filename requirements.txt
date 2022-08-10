@@ -1,0 +1,4 @@
+vtk>=9.2.0rc2
+numpy
+pytest
+pytest-cov

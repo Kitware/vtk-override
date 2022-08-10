@@ -39,7 +39,6 @@ setup(
     python_requires=">=3.7",
     install_requires=[
         "vtk>=9.2.0rc2",
-        "scooby",
     ],
     entry_points={},
 )
