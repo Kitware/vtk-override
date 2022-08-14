@@ -37,8 +37,10 @@ def test__eq__(cube):
     raise NotImplementedError
 
 
-def test_copy_structure(wavelet):
-    raise NotImplementedError
+def test_copy_structure(sphere):
+    copy = vtkPolyData()
+    copy.copy_structure(sphere)
+    assert copy.bounds == sphere.bounds
 
 
 def test_copy_attributes(wavelet):
