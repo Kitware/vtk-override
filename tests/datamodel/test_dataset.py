@@ -40,6 +40,7 @@ def test__eq__(cube):
 def test_copy_structure(sphere):
     copy = vtkPolyData()
     copy.copy_structure(sphere)
+    # todo - add assertions
     assert copy.bounds == sphere.bounds
 
 
