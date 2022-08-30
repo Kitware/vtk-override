@@ -1,7 +1,12 @@
 import numpy as np
 import pytest
 from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkCommonDataModel import (
+    vtkImageData,
+    vtkPointSet,
+    vtkPolyData,
+    vtkUnstructuredGrid,
+)
 
 # def test_shallow_copy(sphere):
 #     # Case 1
@@ -37,8 +42,23 @@ def test__eq__(cube):
     raise NotImplementedError
 
 
-def test_copy_structure(wavelet):
-    raise NotImplementedError
+def test_copy_structure_poly(sphere):
+    copy = vtkPolyData()
+    copy.copy_structure(sphere)
+    assert copy.bounds == sphere.bounds
+    assert copy.center == sphere.center
+    assert np.allclose(copy.points, sphere.points)
+    assert np.allclose(copy.faces, sphere.faces)
+
+
+def test_copy_structure_image(wavelet):
+    copy = vtkImageData()
+    copy.copy_structure(wavelet)
+    assert copy.bounds == wavelet.bounds
+    assert copy.center == wavelet.center
+    assert copy.dimensions == wavelet.dimensions
+    assert copy.spacing == wavelet.spacing
+    assert copy.origin == wavelet.origin
 
 
 def test_copy_attributes(wavelet):
@@ -46,24 +66,41 @@ def test_copy_attributes(wavelet):
 
 
 def test_cast_to_unstructured_grid(sphere):
-    raise NotImplementedError
+    casted = sphere.cast_to_unstructured_grid()
+    assert isinstance(casted, vtkUnstructuredGrid)
+    assert np.allclose(sphere.points, casted.points)
 
 
 def test_cast_to_pointset(sphere):
-    raise NotImplementedError
+    casted = sphere.cast_to_pointset()
+    assert isinstance(casted, vtkPointSet)
+    assert np.allclose(sphere.points, casted.points)
 
 
 def test_cell_points(cube):
-    raise NotImplementedError
+    cube.cell_points(0)
+    # AttributeError: 'NoneType' object has no attribute 'cell_points
 
 
 def test_cell_bounds(cube):
-    raise NotImplementedError
+    cube.cell_points(0)
+    # AttributeError: 'NoneType' object has no attribute 'cell_points
 
 
 def test_cell_type():
-    raise NotImplementedError
+    obj = vtkPointSet()
+    cell_type = obj.cell_type(1)
+    assert cell_type == 0  # empty cell
 
 
-def test_cell_point_ids(cube):
-    raise NotImplementedError
+def test_cell_type_non_empty():
+    obj = vtkPointSet()
+    cell_type = obj.cell_type(1)
+    # todo - insert cell?
+    assert cell_type == 0  # empty cell
+
+
+def test_cell_point_ids():
+    obj = vtkImageData()
+    point_ids = obj.cell_type(0)
+    assert point_ids == 0

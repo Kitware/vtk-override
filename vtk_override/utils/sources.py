@@ -23,6 +23,7 @@ def Cube(center=(0.0, 0.0, 0.0)):
     src.SetYLength(1.0)
     src.SetZLength(1.0)
     src.Update()
+    return src.GetOutput()
 
 
 def Wavelet():
