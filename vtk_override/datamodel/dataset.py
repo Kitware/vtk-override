@@ -14,10 +14,11 @@ from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkDataSet, vtkPointSet, vtkUnstructuredGrid
 from vtkmodules.vtkFiltersCore import vtkAppendFilter
 
+from vtk_override.datamodel.datasetattributes import DataSetAttributes
 from vtk_override.datamodel.object import DataObjectBase
 from vtk_override.utils import override, vtk_ndarray, vtk_points
 from vtk_override.utils._typing import Vector
-from vtk_override.utils.arrays import coerce_pointslike_arg, vtk_to_numpy
+from vtk_override.utils.arrays import FieldAssociation, coerce_pointslike_arg, vtk_to_numpy
 
 
 class DataSetBase(DataObjectBase):
@@ -228,7 +229,7 @@ class DataSetBase(DataObjectBase):
             self.Modified()
             return
         # otherwise, wrap and use the array
-        points = coerce_pointslike_arg(points, copy=False)
+        points, _ = coerce_pointslike_arg(points, copy=False)
         pts = vtk_points(points, False)
         if not pdata:
             self.SetPoints(pts)
@@ -236,28 +237,6 @@ class DataSetBase(DataObjectBase):
             pdata.SetData(pts.GetData())
         self.GetPoints().Modified()
         self.Modified()
-
-    @property
-    def point_data(self):
-        pd = super().GetPointData()
-        pd.dataset = self
-        # TODO: temporary hack
-        pd.dataset.VTKObject = pd.dataset
-        pd.association = self.POINT
-        return pd
-
-    def clear_point_data():
-        raise NotImplementedError
-
-    @property
-    def cell_data(self):
-        cd = super().GetCellData()
-        cd.dataset = self
-        cd.association = self.CELL
-        return cd
-
-    def clear_cell_data():
-        raise NotImplementedError
 
     @property
     def n_arrays(self) -> int:
@@ -433,6 +412,130 @@ class DataSetBase(DataObjectBase):
         cell = self.GetCell(ind)
         point_ids = cell.GetPointIds()
         return [point_ids.GetId(i) for i in range(point_ids.GetNumberOfIds())]
+
+    @property
+    def point_data(self) -> DataSetAttributes:
+        """Return vtkPointData as DataSetAttributes.
+
+        Examples
+        --------
+        Add point arrays to a mesh and list the available ``point_data``.
+
+        >>> from vtk_override.utils.sources import Cube
+        >>> import numpy as np
+        >>> mesh = Cube()
+        >>> mesh.clear_data()
+        >>> mesh.point_data['my_array'] = np.random.random(mesh.n_points)
+        >>> mesh.point_data['my_other_array'] = np.arange(mesh.n_points)
+        >>> mesh.point_data
+        VTK DataSetAttributes
+        Association     : POINT
+        Active Scalars  : my_other_array
+        Active Vectors  : None
+        Active Texture  : None
+        Active Normals  : None
+        Contains arrays :
+            my_array                float64    (8,)
+            my_other_array          int64      (8,)                 SCALARS
+
+        Access an array from ``point_data``.
+
+        >>> mesh.point_data['my_other_array']
+        vtk_ndarray([0, 1, 2, 3, 4, 5, 6, 7])
+
+        Or access it directly from the mesh.
+
+        >>> mesh['my_array'].shape
+        (8,)
+
+        """
+        return DataSetAttributes(
+            self.GetPointData(), dataset=self, association=FieldAssociation.POINT
+        )
+
+    def clear_point_data(self):
+        """Remove all point arrays.
+
+        Examples
+        --------
+        Clear all point arrays from a mesh.
+
+        >>> from vtk_override.utils.sources import Sphere
+        >>> import numpy as np
+        >>> mesh = Sphere()
+        >>> mesh.point_data.keys()
+        ['Normals']
+        >>> mesh.clear_point_data()
+        >>> mesh.point_data.keys()
+        []
+
+        """
+        self.point_data.clear()
+
+    def clear_cell_data(self):
+        """Remove all cell arrays."""
+        self.cell_data.clear()
+
+    def clear_data(self):
+        """Remove all arrays from point/cell/field data.
+
+        Examples
+        --------
+        Clear all arrays from a mesh.
+
+        >>> from vtk_override.utils.sources import Sphere
+        >>> import numpy as np
+        >>> mesh = Sphere()
+        >>> mesh.point_data.keys()
+        ['Normals']
+        >>> mesh.clear_data()
+        >>> mesh.point_data.keys()
+        []
+
+        """
+        self.clear_point_data()
+        self.clear_cell_data()
+        self.clear_field_data()
+
+    @property
+    def cell_data(self) -> DataSetAttributes:
+        """Return vtkCellData as DataSetAttributes.
+
+        Examples
+        --------
+        Add cell arrays to a mesh and list the available ``cell_data``.
+
+        >>> from vtk_override.utils.sources import Cube
+        >>> import numpy as np
+        >>> mesh = Cube()
+        >>> mesh.clear_data()
+        >>> mesh.cell_data['my_array'] = np.random.random(mesh.n_cells)
+        >>> mesh.cell_data['my_other_array'] = np.arange(mesh.n_cells)
+        >>> mesh.cell_data
+        VTK DataSetAttributes
+        Association     : CELL
+        Active Scalars  : my_other_array
+        Active Vectors  : None
+        Active Texture  : None
+        Active Normals  : None
+        Contains arrays :
+            my_array                float64    (6,)
+            my_other_array          int64      (6,)                 SCALARS
+
+        Access an array from ``cell_data``.
+
+        >>> mesh.cell_data['my_other_array']
+        vtk_ndarray([0, 1, 2, 3, 4, 5])
+
+        Or access it directly from the mesh.
+
+        >>> mesh['my_array'].shape
+        (6,)
+
+        """
+        return DataSetAttributes(
+            self.GetCellData(), dataset=self, association=FieldAssociation.CELL
+        )
 
 
 @override(vtkDataSet)

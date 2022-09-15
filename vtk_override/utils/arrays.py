@@ -277,7 +277,7 @@ def vtk_points(points, deep=True, force_float=False):
 
     # verify is numeric
     if not np.issubdtype(points.dtype, np.number):
-        raise TypeError("Points must be a numeric type")
+        raise TypeError(f"Points must be a numeric type, not: {points.dtype}")
 
     if force_float:
         if not np.issubdtype(points.dtype, np.floating):

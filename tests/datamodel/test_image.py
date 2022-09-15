@@ -67,3 +67,15 @@ def test_cast_image_to_rectilinear_grid():
     assert np.allclose(grid.x, [0, 1])
     assert np.allclose(grid.y, [0, 2])
     assert np.allclose(grid.z, [0, 3])
+
+
+def test_image_eq(wavelet):
+    copy = wavelet.copy(deep=True)
+    copy.origin = [1, 1, 1]
+    assert wavelet != copy
+
+    copy.origin = [0, 0, 0]
+    assert wavelet == copy
+
+    copy.point_data.clear()
+    assert wavelet != copy

@@ -12,13 +12,17 @@ from vtk_override.utils import convert_array, override
 class RectilinearGrid(DataSetBase, vtkRectilinearGrid):
     def __init__(self, x=None, y=None, z=None):
         super().__init__()
+        _update = False
         if x is not None:
             self.x = x
+            _update = True
         if y is not None:
             self.y = y
+            _update = True
         if z is not None:
             self.z = z
-        if (x, y, z).count(None) < 3:
+            _update = True
+        if _update:
             self._update_dimensions()
 
     @property

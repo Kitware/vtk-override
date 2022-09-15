@@ -1,12 +1,34 @@
+import collections
+from typing import DefaultDict
+
 from vtkmodules.vtkCommonDataModel import vtkDataObject
 
+from vtk_override.datamodel.datasetattributes import DataSetAttributes
 from vtk_override.utils import override
+from vtk_override.utils.arrays import FieldAssociation
 
 
 class DataObjectBase:
     """A wrapper for vtkDataObject that makes it easier to access FieldData
     arrays as VTKArrays
     """
+
+    @property
+    def _association_bitarray_names(self) -> DefaultDict:
+        # Remember which arrays come from numpy.bool arrays, because there is no direct
+        # conversion from bool to vtkBitArray, such arrays are stored as vtkCharArray.
+        if not hasattr(self, "__association_bitarray_names"):
+            self.__association_bitarray_names = collections.defaultdict(set)
+        # TODO: copy these attributes in `copy` methods
+        return self.__association_bitarray_names
+
+    @property
+    def _association_complex_names(self) -> DefaultDict:
+        # view these arrays as complex128 as VTK doesn't support complex types
+        if not hasattr(self, "__association_complex_names"):
+            self.__association_complex_names = collections.defaultdict(set)
+        # TODO: copy these attributes in `copy` methods
+        return self.__association_complex_names
 
     def shallow_copy(self, to_copy: vtkDataObject) -> vtkDataObject:
         """Shallow copy the given mesh to this mesh.
@@ -115,12 +137,47 @@ class DataObjectBase:
         return self.GetActualMemorySize()
 
     @property
-    def field_data(self):
-        return super().GetFieldData()
+    def field_data(self) -> DataSetAttributes:
+        """Return FieldData as DataSetAttributes.
 
-    @field_data.setter
-    def field_data(self, fd):
-        return super().SetFieldData(fd)
+        Use field data when size of the data you wish to associate
+        with the dataset does not match the number of points or cells
+        of the dataset.
+
+        Examples
+        --------
+        Add field data to a PolyData dataset and then return it.
+
+        >>> from vtk_override.utils.sources import Sphere
+        >>> import numpy as np
+        >>> mesh = Sphere()
+        >>> mesh.field_data['my-field-data'] = np.arange(10)
+        >>> mesh.field_data['my-field-data']
+        vtk_ndarray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+        """
+        return DataSetAttributes(
+            self.GetFieldData(), dataset=self, association=FieldAssociation.NONE
+        )
+
+    def clear_field_data(self):
+        """Remove all field data.
+
+        Examples
+        --------
+        Add field data to a PolyData dataset and then remove it.
+
+        >>> from vtk_override.utils.sources import Sphere
+        >>> mesh = Sphere()
+        >>> mesh.field_data['my-field-data'] = range(10)
+        >>> len(mesh.field_data)
+        1
+        >>> mesh.clear_field_data()
+        >>> len(mesh.field_data)
+        0
+
+        """
+        self.field_data.clear()
 
 
 @override(vtkDataObject)

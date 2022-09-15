@@ -100,4 +100,5 @@ class PointSet(PointSetBase, vtkPointSet):
         else:
             for key, value in self.point_data.items():
                 pdata.point_data[key] = value
+        pdata.make_vertex_cells()
         return pdata

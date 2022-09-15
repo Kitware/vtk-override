@@ -4,11 +4,18 @@ from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtk_override.datamodel.cells import CellArray
 from vtk_override.datamodel.pointset.points import PointSetBase
 from vtk_override.utils import override
+from vtk_override.utils._typing import ID_TYPE
 from vtk_override.utils.arrays import vtk_to_numpy
 
 
 @override(vtkPolyData)
 class PolyData(PointSetBase, vtkPolyData):
+    def make_vertex_cells(self):
+        cells = np.empty((self.n_points, 2), dtype=ID_TYPE)
+        cells[:, 0] = 1
+        cells[:, 1] = np.arange(self.n_points, dtype=ID_TYPE)
+        self.verts = cells
+
     @property
     def verts(self) -> np.ndarray:
         """Get the vertex cells.
@@ -141,8 +148,8 @@ class PolyData(PointSetBase, vtkPolyData):
 
         Examples
         --------
-        >>> import pyvista
-        >>> plane = pyvista.Plane(i_resolution=2, j_resolution=2)
+        >>> from vtk_override.utils.sources import Plane
+        >>> plane = Plane(i_resolution=2, j_resolution=2)
         >>> plane.n_faces
         4
 

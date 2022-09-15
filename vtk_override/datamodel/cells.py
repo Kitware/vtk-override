@@ -36,7 +36,7 @@ def ncells_from_cells(cells):
     return n_cells
 
 
-@override
+@override(vtkCellArray)
 class CellArray(vtkCellArray):
     """Wrapping of vtkCellArray.
 
