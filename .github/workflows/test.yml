@@ -1,0 +1,46 @@
+name: Testing
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+  push:
+    tags:
+      - "*"
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SHELLOPTS: 'errexit:pipefail'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8, 3.9, "3.10"]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: |
+          pip install wheel
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Test Core API
+        run: |
+          pytest -v --cov=vtk_override .
+
+      - name: Doc test
+        run: pytest -v --doctest-modules --cov=vtk_override vtk_override

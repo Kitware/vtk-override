@@ -1,0 +1,74 @@
+# Compiled source #
+###################
+*.pyc
+*.pyd
+*.so
+*.o
+__pycache__/
+
+# Cython generated files #
+#pymeshfix/cython/_meshfix.cpp
+
+# OS generated files #
+######################
+.fuse_hidden*
+*~
+
+# Pip generated folders #
+#########################
+*.egg-info/
+build/
+dist/
+
+# MISC
+.mypy_cache
+
+# testing coverage and cache
+.pytest_cache/
+tests/.coverage
+tests/htmlcov/
+
+# windows
+test.bat
+
+# Jupyter notebook cache
+**/.ipynb_checkpoints
+
+# Code coverage results
+htmlcov
+.coverage
+*,cover
+
+# Mac
+.DS_Store
+
+# flask examples
+examples_flask/dynamic_image/static
+examples_flask/static_image/static
+
+# hypothesis
+.hypothesis
+
+# emacs
+*#
+.#
+flycheck*
+
+# vim
+*.swp
+
+# benchmark cache from pytest-benchmark
+.benchmarks
+
+# PyCharm
+.idea/
+
+# virtual environments
+venv/
+.venv/
+
+# VSCode
+.vscode/
+
+wheels/
+debug/
